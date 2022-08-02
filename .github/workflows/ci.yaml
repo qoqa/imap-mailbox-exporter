@@ -1,4 +1,4 @@
-name: "Build"
+name: "CI"
 
 on:
   push:
@@ -7,9 +7,10 @@ on:
   pull_request:
     branches:
       - "main"
+  workflow_call:
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-22.04
 
     steps:
