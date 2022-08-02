@@ -12,7 +12,12 @@ jobs:
 
   release:
     runs-on: ubuntu-22.04
+    needs: [ "ci" ]
+
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
