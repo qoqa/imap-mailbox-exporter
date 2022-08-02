@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+
+  imap-exporter:
+    image: "ghcr.io/jop-software/imap-mailbox-exporter:latest"
+    env_file:
+      - "imap-exporter.env"
+    ports:
+      - "9101:9101"

@@ -26,6 +26,21 @@ http://127.0.0.1:9101/probe?mailbox=INBOX
 probe_mailbox_count 0
 ```
 
+### Example Usage
+
+You can find a example docker compose configuration.
+
+Make sure to update `examples/imap-exporter.env` with your imap credentials.
+
+**Start the example container**
+
+```shell
+pushd examples
+
+docker compose pull
+docker compose up -d
+```
+
 ## License
 
 This project is licensed under the [MIT License](./LICENCE)
