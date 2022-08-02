@@ -15,7 +15,7 @@ IMAP_PASSWORD=""
 ### Probe
 
 ```txt
-http://127.0.0.1:9101/probe?mailbox=INBOX
+http://127.0.0.1:9101/probe?target=INBOX
 ```
 
 ### Provided metrics

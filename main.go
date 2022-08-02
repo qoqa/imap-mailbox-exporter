@@ -81,11 +81,17 @@ func main() {
 	})
 
 	http.HandleFunc("/probe", func(w http.ResponseWriter, r *http.Request) {
-		mailbox := r.URL.Query().Get("mailbox")
-		if mailbox == "" {
-			http.Error(w, "Mailbox parameter is missing", http.StatusBadRequest)
-			return
+		// Maily use the target parameter, but support mailbox as a fallback.
+		target := r.URL.Query().Get("target")
+		if target == "" {
+			target = r.URL.Query().Get("mailbox")
+			if target == "" {
+				http.Error(w, "Mailbox parameter is missing", http.StatusBadRequest)
+				return
+			}
 		}
+
+		mailbox := target
 
 		probeCountGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "probe_mailbox_count",
