@@ -98,9 +98,12 @@ func main() {
 		// TODO: Proper error handling
 		count, err := countMailsInMailbox(mailbox)
 		if err != nil {
+			log.Printf("Cound not load mailbox data: %v", err)
 			http.Error(w, fmt.Sprintf("Cound not load mailbox data: %v", err), http.StatusInternalServerError)
 			return
 		}
+
+		log.Printf("Loaded mail count for mailbox %s: %d", mailbox, count)
 
 		probeCountGauge.Set(float64(count))
 
