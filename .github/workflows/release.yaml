@@ -9,10 +9,12 @@ jobs:
   ci:
     uses: './.github/workflows/ci.yaml'
 
+  test:
+    uses: './.github/workflows/ci.yaml'
 
   release:
     runs-on: ubuntu-22.04
-    needs: [ "ci" ]
+    needs: [ "ci", "test" ]
 
     steps:
       - name: Checkout
