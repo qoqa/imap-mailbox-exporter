@@ -26,6 +26,23 @@ http://127.0.0.1:9101/probe?target=INBOX
 probe_mailbox_count 0
 ```
 
+### Configuration
+
+The `imap-mailbox-exporter` can be configures with a `config.yaml` file and environment variables.
+
+```yaml
+server:
+- hostname: 'hostname'
+  port: '1234'
+  accounts:
+    - username: 'e@mail.com'
+      password: 'env:E_AT_MAIL_COM_PASSWORD'
+```
+
+You can use environment variables with the `env:VARIABLE_NAME` directive in YAML.
+
+The configuration file is expected in `./config.yaml` relative to the `imap-mailbox-exporter` binary.
+
 ### Example Usage
 
 You can find a example docker compose configuration.
