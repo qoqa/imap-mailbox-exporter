@@ -1,0 +1,6 @@
+server:
+- hostname: 'imap.mail.com'
+  port: '993'
+  accounts:
+    - username: 'e@mail.com'
+      password: 'env:E_MAIL_COM_PW'
