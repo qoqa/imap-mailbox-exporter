@@ -50,6 +50,17 @@ docker compose pull
 docker compose up -d
 ```
 
+## Compilation
+
+You can compile the source-code with the `go build` command.
+
+```bash
+go build -o imap-mailbox-exporter main.go
+```
+
+Alternativly you can use [`gnu make`](https://www.gnu.org/software/make/) with the `make build` command to execute the `go build` command.
+
+
 ## License
 
 This project is licensed under the [MIT License](./LICENCE)
