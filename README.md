@@ -4,18 +4,10 @@
 
 ## Usage
 
-### Configuration
-
-```dotenv
-IMAP_SERVER=""
-IMAP_USERNAME=""
-IMAP_PASSWORD=""
-```
-
 ### Probe
 
 ```txt
-http://127.0.0.1:9101/probe?target=INBOX
+http://127.0.0.1:9101/probe?target=INBOX&hostname=imap.example.com&username=me@example.com
 ```
 
 ### Provided metrics
@@ -32,10 +24,10 @@ The `imap-mailbox-exporter` can be configures with a `config.yaml` file and envi
 
 ```yaml
 server:
-- hostname: 'hostname'
-  port: '1234'
+- hostname: 'imap.example.com'
+  port: '993'
   accounts:
-    - username: 'e@mail.com'
+    - username: 'me@example.com'
       password: 'env:E_AT_MAIL_COM_PASSWORD'
 ```
 
