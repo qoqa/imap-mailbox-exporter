@@ -3,3 +3,4 @@
 
 .env
 imap-mailbox-exporter
+/config.yaml

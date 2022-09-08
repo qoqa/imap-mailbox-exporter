@@ -30,3 +30,19 @@ jobs:
       run: |
         go vet .
         golint -set_exit_status=1 .
+
+  test:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '>=1.18.0'
+
+    - name: Install dependencies
+      run: |
+        go version
+
+    - name: Test
+      run: go test ./...

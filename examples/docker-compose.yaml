@@ -4,6 +4,8 @@ services:
 
   imap-exporter:
     image: "ghcr.io/jop-software/imap-mailbox-exporter:latest"
+    volumes:
+      - ./config.yaml:/config.yaml
     env_file:
       - "imap-exporter.env"
     ports:

@@ -1,48 +1,21 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/emersion/go-imap/client"
 	"github.com/joho/godotenv"
+	"github.com/jop-software/imap-mailbox-exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Config holds the base IMAP credentialsf
-type Config struct {
-	ImapUsername string
-	ImapPassword string
-	ImapServer   string
-}
+var cfg *config.Config
 
-func (c *Config) validate() bool {
-	return c.ImapUsername != "" && c.ImapServer != "" && c.ImapPassword != ""
-}
-
-// NewConfig creates and validated a new Config struct from environment variables
-func NewConfig() (*Config, error) {
-	config := &Config{
-		ImapServer:   os.Getenv("IMAP_SERVER"),
-		ImapUsername: os.Getenv("IMAP_USERNAME"),
-		ImapPassword: os.Getenv("IMAP_PASSWORD"),
-	}
-
-	if !config.validate() {
-		return nil, errors.New("not all needed configuration flags could be found")
-	}
-
-	return config, nil
-}
-
-var config *Config
-
-func countMailsInMailbox(mailbox string) (uint32, error) {
-	c, err := client.DialTLS(config.ImapServer, nil)
+func countMailsInMailbox(server config.ConfigServer, account config.ConfigAcccount, mailbox string) (uint32, error) {
+	c, err := client.DialTLS(server.HostPort(), nil)
 	if err != nil {
 		return 0, err
 	}
@@ -50,7 +23,7 @@ func countMailsInMailbox(mailbox string) (uint32, error) {
 	defer c.Logout()
 
 	// Login
-	if err := c.Login(config.ImapUsername, config.ImapPassword); err != nil {
+	if err := c.Login(account.Username, account.Password); err != nil {
 		return 0, err
 	}
 
@@ -68,12 +41,12 @@ func main() {
 	_ = godotenv.Load()
 
 	// Intialize Config
-	conf, err := NewConfig()
+	conf, err := config.NewConfig("./config.yaml")
 	if err != nil {
 		log.Fatalf("Could not load configuration: %v", err)
 	}
 
-	config = conf
+	cfg = conf
 
 	http.HandleFunc("/-/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -93,6 +66,18 @@ func main() {
 
 		mailbox := target
 
+		hostname := r.URL.Query().Get("hostname")
+		if hostname == "" {
+			http.Error(w, "Hostname parameter is missing", http.StatusBadRequest)
+			return
+		}
+
+		username := r.URL.Query().Get("username")
+		if username == "" {
+			http.Error(w, "Username parameter is missing", http.StatusBadRequest)
+			return
+		}
+
 		probeCountGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "probe_mailbox_count",
 			Help: "Displays the count of mails found in the mailbox",
@@ -101,15 +86,20 @@ func main() {
 		registry := prometheus.NewRegistry()
 		registry.MustRegister(probeCountGauge)
 
+		server, account, err := cfg.FindAccountInServer(hostname, username)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+
 		// TODO: Proper error handling
-		count, err := countMailsInMailbox(mailbox)
+		count, err := countMailsInMailbox(*server, *account, mailbox)
 		if err != nil {
 			log.Printf("Cound not load mailbox data: %v", err)
 			http.Error(w, fmt.Sprintf("Cound not load mailbox data: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Loaded mail count for mailbox %s: %d", mailbox, count)
+		log.Printf("Load mailbox count for %s of %s on %s: %d", mailbox, username, hostname, count)
 
 		probeCountGauge.Set(float64(count))
 

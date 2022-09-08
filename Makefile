@@ -1,7 +1,7 @@
 BINARY=imap-mailbox-exporter
 
 build:
-	go build -o $(BINARY) ./...
+	go build -o $(BINARY) main.go
 
 run: build
 	./$(BINARY)
