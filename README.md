@@ -15,7 +15,10 @@ http://127.0.0.1:9101/probe?target=INBOX&hostname=imap.example.com&username=me@e
 ```txt
 # HELP probe_mailbox_count Displays the count of mails found in the mailbox
 # TYPE probe_mailbox_count gauge
-probe_mailbox_count 0
+probe_mailbox_count 5
+# HELP probe_mailbox_unread_count Displays the count of unread mails found in the mailbox
+# TYPE probe_mailbox_unread_count gauge
+probe_mailbox_unread_count 2
 ```
 
 ### Configuration

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/joho/godotenv"
 	"github.com/jop-software/imap-mailbox-exporter/config"
@@ -14,26 +15,34 @@ import (
 
 var cfg *config.Config
 
-func countMailsInMailbox(server config.ConfigServer, account config.ConfigAcccount, mailbox string) (uint32, error) {
+func countMailsInMailbox(server config.ConfigServer, account config.ConfigAcccount, mailbox string) (uint32, int, error) {
 	c, err := client.DialTLS(server.HostPort(), nil)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	defer c.Logout()
 
 	// Login
 	if err := c.Login(account.Username, account.Password); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	// Select INBOX
 	mbox, err := c.Select(mailbox, true)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return mbox.Messages, nil
+	// Count unread emails
+	criteria := imap.NewSearchCriteria()
+	criteria.WithoutFlags = []string{imap.SeenFlag}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return mbox.Messages, len(ids), nil
 }
 
 func main() {
@@ -83,8 +92,14 @@ func main() {
 			Help: "Displays the count of mails found in the mailbox",
 		})
 
+		probeUnreadGauge := prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "probe_mailbox_unread_count",
+			Help: "Displays the count of unread mails found in the mailbox",
+		})
+
 		registry := prometheus.NewRegistry()
 		registry.MustRegister(probeCountGauge)
+		registry.MustRegister(probeUnreadGauge)
 
 		server, account, err := cfg.FindAccountInServer(hostname, username)
 		if err != nil {
@@ -92,16 +107,17 @@ func main() {
 		}
 
 		// TODO: Proper error handling
-		count, err := countMailsInMailbox(*server, *account, mailbox)
+		count, unread, err := countMailsInMailbox(*server, *account, mailbox)
 		if err != nil {
 			log.Printf("Cound not load mailbox data: %v", err)
 			http.Error(w, fmt.Sprintf("Cound not load mailbox data: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Load mailbox count for %s of %s on %s: %d", mailbox, username, hostname, count)
+		log.Printf("Load mailbox count for %s of %s on %s: %d/%d", mailbox, username, hostname, count, unread)
 
 		probeCountGauge.Set(float64(count))
+		probeUnreadGauge.Set(float64(unread))
 
 		h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 		h.ServeHTTP(w, r)
